@@ -1,6 +1,5 @@
 const { GraphQLObjectType, GraphQLInt, GraphQLString } = require('graphql');
 
-// Budget Type
 const BudgetType = new GraphQLObjectType({
     name: 'Budget',
     fields: () => ({

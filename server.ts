@@ -1,23 +1,24 @@
-const express = require('express');
-const { graphqlHTTP } = require('express-qraphql');
-const { buildSchema } = require('graphql');
-// const schema = require('./schema');
+import express from 'express';
+import { ApolloServer } from 'apollo-server-express';
+import http from 'http';
+import cors from 'cors';
+
+import typeDefs from './schemas/categories';
+import models, { sequelize } from './models';
+import resolvers from './resolvers';
 
 const app = express();
-var schema = buildSchema(`
-  type Query {
-    hello: String
-  }
-`);
- 
-var root = { hello: () => 'Hello world!' };
 
-app.use('/graphql', graphqlHTTP({
-    schema,
-    rootValue: root,
-    graphiql: true,
-}));
+app.use(cors());
+
+const server = new ApolloServer({typeDefs, resolvers, context: () => ({ models })});
+
+server.applyMiddleware({ app, path: '/graphql' });
+
+const httpServer = http.createServer(app);
+server.installSubscriptionHandlers(httpServer);
 
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+sequelize.sync().then(async () => {
+    httpServer.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+})
